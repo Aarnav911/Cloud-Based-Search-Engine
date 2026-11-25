@@ -1,0 +1,16 @@
+{
+  "name": "scholarfind",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cloud-Based Academic Resource Search and Recommendation System (UCS531)",
+  "scripts": {
+    "setup": "npm install && npm install --prefix frontend && npm install --prefix backend",
+    "dev": "concurrently -n UI,API -c blue,green \"npm run ui\" \"npm run api\"",
+    "ui": "npm run dev --prefix frontend",
+    "api": "npm run start --prefix backend",
+    "setup:aws": "npm run setup:aws --prefix backend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}
