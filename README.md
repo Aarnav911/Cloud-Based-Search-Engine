@@ -1,7 +1,32 @@
 # ScholarFind
 
-Cloud-Based Academic Resource Search and Recommendation System (UCS531).
-BM25 search over uploaded PDFs. Index in **Amazon DynamoDB**, files in **Amazon S3**.
+Cloud-Based Academic Resource Search Engine Using BM25 (UCS531 Cloud Computing, Thapar Institute of Engineering and Technology, Patiala).
+
+Students search a collection of academic PDFs (lecture notes, research papers, assignments, lab manuals and previous-year question papers) and get results ranked by relevance using BM25. PDFs are stored in **Amazon S3**, document metadata and the search index live in **Amazon DynamoDB**, and the Node.js / Express backend runs on **Amazon EC2**. **AWS IAM** controls access between these components.
+
+## Architecture
+
+```
+Users (students / admin)
+        |
+   React frontend  (search, filters, results, admin upload)
+        |  REST API
+        v
+  Amazon EC2: Node.js / Express
+    - REST API layer
+    - Search service      (query preprocessing, BM25 scoring, filters, ranking)
+    - Indexing pipeline   (store PDF, extract text, tokenize, build inverted index)
+        |                         |
+        v                         v
+  Amazon DynamoDB            Amazon S3
+  (metadata + index)         (PDF files)
+
+  AWS IAM: roles and policies secure access between EC2, DynamoDB and S3
+```
+
+- **Search:** the backend reads index terms and metadata from DynamoDB, scores documents with BM25 and returns ranked results.
+- **PDF access:** each result carries a time-limited (15 minute) pre-signed S3 link to its PDF.
+- **Upload:** the admin page sends a PDF to the backend, which stores it in S3, extracts and preprocesses the text, and updates the DynamoDB metadata and index.
 
 ```
 ScholarFind/
@@ -23,7 +48,7 @@ Open http://localhost:5173. The UI uses sample data until you switch it to the r
 
 ## 2. Connect AWS
 
-1. **Credentials.** Install the AWS CLI and run `aws configure`, or put `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` in `backend/.env`. Never commit that file.
+1. **Credentials.** Install the AWS CLI and run `aws configure`, or put `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` in `backend/.env`. Never commit that file. On EC2, attach an IAM role to the instance instead of using access keys.
 2. **Config.** Copy `backend/.env.example` to `backend/.env`. Set `AWS_REGION` and a globally unique `S3_BUCKET`.
 3. **Create the table and bucket** (safe to run again):
    ```bash
@@ -55,8 +80,6 @@ The footer's "Showing sample data" note disappears once the real API is on.
 | PDF upload, text extraction, index update | Done |
 | BM25 ranking on DynamoDB, course / semester / type filters | Done |
 | PDFs in S3 with time-limited links | Done |
-| Login for the admin page | To build |
-| Delete a document | To build |
-| Deploy to EC2 | To build |
+| Deployed on Amazon EC2 | Done |
 
 See `docs/DYNAMODB_SCHEMA.md` for the table design and IAM permissions.
